@@ -1,0 +1,27 @@
+# Never bake runtime data / models / caches into the trainer image.
+# Compliance (env rules: no bundled dataset / no bundled model) + reproducibility.
+# These are all generated or downloaded at RUNTIME (self-gen trajectories, the
+# validator-provided task model, validator-whitelisted datasets, the leduc CFR
+# solver cache) — never shipped in the image. They are gitignored too, but the
+# Docker build context honors .dockerignore, so this is the belt-and-suspenders
+# that guarantees a stray populated dir can't silently bake into a rebuild.
+scripts/datasets/
+scripts/models/
+
+# Local-only measurement/verification tooling: NOT reachable from the tournament
+# entrypoint (run_text_trainer.sh -> text_trainer.py). Verified by import-closure:
+# 24 of 35 modules are reachable; everything under tools/ is not. These are run by
+# hand on a dev box (eval_pvp_winrate, presubmit_check, combined_dryrun), so they
+# must stay in the repo but must not be baked into the trainer image.
+# NOTE: eval_pvp_winrate imports `from envs import ...`, so it only runs as
+#   cd scripts && python -m tools.eval_pvp_winrate
+# which is why tools/ stays inside scripts/ and is excluded here instead of moved.
+scripts/tools/
+scripts/envs/.expert_cache/
+scripts/**/.expert_cache/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.git/
+.gitignore
+*.log
